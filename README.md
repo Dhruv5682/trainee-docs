@@ -9,6 +9,7 @@
 
 | Category | Description |
 |----------|-------------|
+| [☁️ Azure](azure/) | AZ-104 study pack, Azure administration, labs, quick revision |
 | [🪟 Windows](windows/) | Windows Server, Active Directory, GPO, DNS, DHCP, PowerShell |
 | [🐧 Linux](linux/) | _Coming soon_ — Fundamentals, shell scripting, systemd, networking |
 | [🌐 Servers](servers/) | Nginx, Apache, IIS — reverse proxy, SSL, static hosting, production Q&A |
@@ -20,6 +21,7 @@
 
 | Cheatsheet | Category |
 |------------|----------|
+| [AZ-104 Azure Administrator Study Pack](azure/README.md) | Azure |
 | [Windows Server 2022](windows/windows_server_2022_cheatsheet.md) | Windows |
 | [Linux Admin Handbook](linux/linux_admin_handbook.md) | Linux |
 | [Nginx](servers/nginx.md) | Servers |
@@ -37,6 +39,12 @@
 ├── windows/
 │   ├── README.md          ← Windows category index
 │   └── windows_server_2022_cheatsheet.md
+├── azure/
+│   ├── README.md          ← Azure category index
+│   ├── az104_azure_administrator_handbook.md
+│   ├── az104_quick_revision_cheatsheet.md
+│   ├── az104_ultra_short_cram_sheet.md
+│   └── az104_practice_labs.md
 ├── linux/
 │   ├── README.md          ← Linux category index (coming soon)
 │   └── linux_admin_handbook.md
