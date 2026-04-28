@@ -6,13 +6,13 @@ description: |
   **Workflow**: Analyze requirements → Extract context from repo → Generate outline → Create structured document → Validate quality → Output formatted markdown.
   
   **Use**: "Generate documentation for X topic with Y custom requirements" or "@doc-orchestrator [topic] with [requirements]"
-requiredTools:
+requiredTools:                     # Descriptive — not enforced by runtime
   - semantic_search
   - read_file
   - grep_search
-maxConcurrentCalls: 3
-contextAwareness: true
-stages:
+maxConcurrentCalls: 3              # Descriptive — not enforced by runtime
+contextAwareness: true             # Descriptive — not enforced by runtime
+stages:                            # Descriptive — documents the workflow
   - name: "requirement-analysis"
     tools: []
     description: "Parse and structure user input into formal requirements"
@@ -55,6 +55,11 @@ The **Document Orchestrator** is a multi-stage agentic system that generates pro
 - **Style extraction** from similar topic files (tone, emoji usage, formatting)
 - **Template identification** from templated documents
 - Collect sample headers, table formats, code examples, ASCII diagrams
+- **Topic-hint loading:** Based on the topic domain, load additional patterns:
+  - **Cloud/Azure/AWS:** Load `exam-pattern-match`, `decision-table`, `dual-walkthrough`, `exam-trap-table` patterns. Expect portal + CLI dual examples, cost considerations, service comparison tables.
+  - **Linux/Server:** Load `comprehensive-structure`, `mental-models`, `command-grouping`. Expect inline shell examples, configuration file samples.
+  - **Networking:** Load `progressive-difficulty`, `gotchas-and-warnings`. Expect topology diagrams, protocol tables.
+  - **Certification study:** Load `exam-pattern-match`, `exam-trap-table`. Expect exam weighting, pattern-matching tables, revision cards.
 - Output: Context bundle with patterns, examples, and style guide
 
 ### Stage 3: Outline Generation
@@ -152,7 +157,11 @@ metadata_footer:
 - Clear progress indicators during multi-step generation
 - Actionable feedback if validation fails
 - Option to request modifications to specific sections
-- Export options (markdown, PDF, HTML)
+- Export: Output is markdown. For PDF/HTML conversion, use `pandoc`:
+  ```bash
+  pandoc document.md -o document.pdf --pdf-engine=xelatex
+  pandoc document.md -o document.html -s --css=style.css
+  ```
 
 ## Configuration
 
@@ -205,4 +214,4 @@ Agent output:
 
 ---
 
-**Version:** 1.0 | **Last Updated:** 2026-04-28 | **Maintainer:** DevOps Documentation Team
+**Version:** 2.0 | **Last Updated:** 2026-04-28 | **Maintainer:** DevOps Documentation Team

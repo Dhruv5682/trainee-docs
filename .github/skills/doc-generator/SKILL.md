@@ -22,24 +22,25 @@ The Document Generator Skill provides a structured framework for generating prod
 ## Quick Start
 
 ### For Handbook/Comprehensive Guide
-```bash
-Use: /doc-generator → Select "handbook" template
-Customize: Audience, topic, section count
-Apply patterns: "comprehensive-structure", "mental-models", "progressive-difficulty"
+```
+@doc-orchestrator Generate a comprehensive handbook for [topic].
+Audience: [role]. Depth: handbook.
+Apply patterns: comprehensive-structure, mental-models, progressive-difficulty.
+Include inline CLI examples, ASCII diagrams, and gotchas per section.
 ```
 
 ### For Cheatsheet
-```bash
-Use: /doc-generator → Select "cheatsheet" template
-Customize: Command depth, table vs. prose balance
-Apply patterns: "quick-reference", "command-grouping", "syntax-focus"
+```
+@doc-orchestrator Generate a cheatsheet for [topic].
+Format: compressed lookup tables only, no explanations.
+Apply patterns: quick-reference, command-grouping, syntax-focus.
 ```
 
-### For Procedural Guide
-```bash
-Use: /doc-generator → Select "procedure" template
-Customize: Difficulty level, expected outcomes
-Apply patterns: "step-sequence", "error-handling", "recovery"
+### For Procedural Guide / Lab Pack
+```
+@doc-orchestrator Generate a practice lab pack for [topic].
+Include portal walkthrough, CLI walkthrough, verification, and cleanup per lab.
+Apply patterns: step-sequence, error-handling, recovery.
 ```
 
 ## Pattern Library
@@ -310,14 +311,78 @@ proper_config --safe-flag
 📚 Documentation/theory
 📋 Checklist
 🔧 Tools/configuration
+☁️ Cloud/Azure section
 ```
 
 **Usage in headings:**
 ```markdown
 # 🐧 Linux Administration — Comprehensive Handbook
+# ☁️ AZ-104 Azure Administrator — Comprehensive Study Handbook
 ## 🏗️ Repo Structure
 ### 🔒 Security Hardening
 ```
+
+---
+
+### Cloud/Certification-Specific Patterns
+
+The following patterns were extracted from the AZ-104 Azure study pack and apply to cloud service documentation and certification study guides.
+
+#### 11. Exam Pattern-Matching Table
+**Name:** `exam-pattern-match`
+**Usage:** Map question patterns to answer directions for certification study
+**Format:**
+```markdown
+| Question pattern | Answer direction |
+|-----------------|------------------|
+| "Temporary access to storage" | SAS token |
+| "Identity-based access" | Entra ID + data RBAC role |
+| "Prevent accidental delete" | Lock (CanNotDelete) |
+```
+**Source:** `azure/az104_ultra_short_cram_sheet.md`
+**Why:** Certification exams use recurring question patterns. This table trains pattern recognition.
+
+#### 12. Cross-Domain Decision Table
+**Name:** `decision-table`
+**Usage:** Map a need to the best tool/service across a technology domain
+**Format:**
+```markdown
+| Need | Best tool |
+|------|-----------|
+| HTTP-aware routing with WAF | Application Gateway |
+| TCP/UDP distribution | Load Balancer (L4) |
+```
+**Source:** `azure/az104_azure_administrator_handbook.md` §7
+**Why:** Readers need fast answers to "which service do I pick?" questions.
+
+#### 13. Portal + CLI Dual Walkthrough
+**Name:** `dual-walkthrough`
+**Usage:** Show the same task via portal steps and CLI commands side by side
+**Format:**
+```markdown
+### Portal Walkthrough
+1. Open the Azure portal and navigate to...
+2. Click... and configure...
+
+### CLI Walkthrough
+```bash
+az resource create --name ... --resource-group ...
+```
+```
+**Source:** `azure/az104_practice_labs.md`
+**Why:** Cloud documentation must serve both GUI-oriented and CLI-oriented readers.
+
+#### 14. Exam Trap Table
+**Name:** `exam-trap-table`
+**Usage:** List common misconceptions with correct thinking
+**Format:**
+```markdown
+| Trap | Correct thinking | Section |
+|------|------------------|---------|
+| Policy grants access | Policy = compliance; RBAC = access | §2.8 |
+```
+**Source:** `azure/az104_azure_administrator_handbook.md` §8
+**Why:** Certification candidates fall for the same traps repeatedly. Explicit correction helps.
 
 ---
 
@@ -624,9 +689,9 @@ rm -rf /tmp/test_dir
 
 ### File Naming
 
-- Use lowercase with hyphens: `my-document.md`
-- Descriptive names: `nginx-ssl-configuration.md`
-- Avoid generic names: ✗ `guide.md`, ✓ `docker-production-guide.md`
+- Use lowercase with underscores: `my_document.md` (repo convention)
+- Descriptive names: `nginx_ssl_configuration.md`, `az104_azure_administrator_handbook.md`
+- Avoid generic names: ✗ `guide.md`, ✓ `docker_production_guide.md`
 
 ### Directory Structure
 
