@@ -1,29 +1,40 @@
+---
+Version: 2.0
+Last Updated: 2026-04-28
+Status: Published
+---
+
 [🏠 Home](../README.md) · [Azure](README.md)
 
 # ☁️ AZ-104 Azure Administrator — Practice Lab Pack
 
-> **Audience:** AZ-104 candidates who want implementation practice  
-> **Focus:** Portal, CLI, and PowerShell-style scenario work  
+> **Audience:** AZ-104 candidates who want implementation practice
+> **Focus:** Portal, CLI, and PowerShell-style scenario work
 > **Tip:** Use a free trial or sandbox subscription. The goal is deliberate practice, not a perfect production build.
+
+---
 
 ## Table of Contents
 
-1. [Lab 0 — Prep and Lab Rules](#1-lab-0--prep-and-lab-rules)
-2. [Lab 1 — Identity, Scope, and Governance](#2-lab-1--identity-scope-and-governance)
-3. [Lab 2 — Storage Access and Data Protection](#3-lab-2--storage-access-and-data-protection)
-4. [Lab 3 — Compute and Networking](#4-lab-3--compute-and-networking)
-5. [Lab 4 — Monitoring and Alerting](#5-lab-4--monitoring-and-alerting)
-6. [Practice Questions](#6-practice-questions)
-7. [Answer Checklists](#7-answer-checklists)
-8. [Lab Gotchas](#8-lab-gotchas)
+1. [Lab Rules and Setup](#lab-0--rules-and-setup)
+2. [Identity, Scope, and Governance](#lab-1--identity-scope-and-governance)
+3. [Storage Access and Data Protection](#lab-2--storage-access-and-data-protection)
+4. [Compute and Networking](#lab-3--compute-and-networking)
+5. [Monitoring and Alerting](#lab-4--monitoring-and-alerting)
+6. [Practice Questions](#practice-questions)
+7. [Answer Key](#answer-key)
 
-## 1. Lab 0 — Prep and Lab Rules
+> **See also:** For real-world Azure labs, check the [labs directory](../labs/) which includes hands-on infrastructure deployment scenarios.
 
-Use one resource group per lab. Name things clearly and delete them when done. The goal is to learn the scope boundaries and the operational flow, not to keep the environment forever.
+---
+
+## Lab 0 — Rules and Setup
+
+Use one resource group per lab. Name things clearly and delete them when done.
 
 ### Walkthrough Pattern
 
-Each lab below uses the same flow:
+Each lab uses the same flow:
 
 1. Do it in the portal first so you can see the knobs.
 2. Repeat it with CLI or PowerShell so the configuration becomes repeatable.
@@ -47,7 +58,9 @@ Each lab below uses the same flow:
 | PowerShell | Azure administrative automation |
 | Cloud Shell | Browser-based authenticated shell |
 
-## 2. Lab 1 — Identity, Scope, and Governance
+---
+
+## Lab 1 — Identity, Scope, and Governance
 
 ### Objective
 
@@ -75,22 +88,16 @@ You need to allow a team to manage a resource group, but only within a constrain
 5. Add tags from the resource group blade.
 6. Add a lock on a resource or the resource group.
 
-### CLI / PowerShell Walkthrough
+### CLI Walkthrough
 
 ```bash
-# Login and select subscription
-az login
-az account set --subscription "<subscription-id-or-name>"
-
 # Create a resource group
 az group create \
 	--name az104-lab-rg \
 	--location eastus
 
-# Create a security group requires Microsoft Graph or portal handling depending on tenant policy
-# For the lab, create the group in the portal, then continue with RBAC in CLI.
-
-# Assign Contributor at resource group scope
+# Create a security group (may require portal depending on tenant policy)
+# Then assign Contributor at resource group scope
 az role assignment create \
 	--assignee-object-id <group-object-id> \
 	--assignee-principal-type Group \
@@ -111,27 +118,34 @@ az lock create \
 
 ### Verification
 
-| Check | What to run |
-|------|-------------|
+| Check | How to verify |
+|-------|---------------|
 | RBAC | Open Access control (IAM) and confirm the group assignment |
 | Policy | Try creating a disallowed resource and confirm denial |
 | Lock | Attempt to delete the locked scope and confirm rejection |
 
-### Expected Outcome
+### Success Criteria
 
-- The group can work inside the scope you assigned.
-- The policy blocks noncompliant resources.
-- The lock prevents accidental deletion.
+- The group can create and manage resources in the scoped resource group.
+- A denied deployment fails for a noncompliant resource.
+- Deletion is blocked until the lock is removed.
 
-### Success Check
+### Cleanup
 
-| Check | What to verify |
-|------|----------------|
-| RBAC | The group can create and manage resources in the scoped resource group |
-| Policy | A denied deployment fails for a noncompliant resource |
-| Lock | Deletion is blocked until the lock is removed |
+```bash
+# Remove the lock first (required before deletion)
+az lock delete --name rg-delete-lock --resource-group az104-lab-rg
 
-## 3. Lab 2 — Storage Access and Data Protection
+# Delete the resource group and everything inside
+az group delete --name az104-lab-rg --yes --no-wait
+
+# Optionally delete the security group
+az ad group delete --group "AZ104-Lab-Team"
+```
+
+---
+
+## Lab 2 — Storage Access and Data Protection
 
 ### Objective
 
@@ -156,7 +170,7 @@ Configure a storage account with multiple access methods and recovery protection
 5. Add a lifecycle management rule.
 6. Open Networking and restrict the account with a private endpoint or firewall rule.
 
-### CLI / PowerShell Walkthrough
+### CLI Walkthrough
 
 ```bash
 # Create storage account
@@ -178,10 +192,10 @@ az storage container generate-sas \
 	--name lab-container \
 	--account-name <storage-account-name> \
 	--permissions rwd \
-	--expiry 2026-04-29T00:00Z \
+	--expiry $(date -u -d "2 hours" '+%Y-%m-%dT%H:%MZ') \
 	--auth-mode login
 
-# Show account keys if needed for comparison
+# Show account keys for comparison
 az storage account keys list \
 	--account-name <storage-account-name> \
 	--resource-group az104-lab-rg
@@ -189,16 +203,16 @@ az storage account keys list \
 
 ### Verification
 
-| Check | What to run |
-|------|-------------|
+| Check | How to verify |
+|-------|---------------|
 | SAS | Open the SAS URL and confirm limited access |
 | Keys | Compare with full account key access |
 | Protection | Delete a blob and confirm soft delete/versioning behavior |
 
 ### Validation Questions
 
-| Question | What the exam wants |
-|----------|---------------------|
+| Question | Expected answer |
+|----------|----------------|
 | Which access method is temporary? | SAS |
 | Which access method is broader? | Account key |
 | Which feature protects against accidental deletion? | Soft delete / versioning |
@@ -206,9 +220,18 @@ az storage account keys list \
 
 ### Stretch Goal
 
-Try to access the storage account by name from a private endpoint-enabled network and confirm the DNS record resolves correctly.
+Access the storage account by name from a private endpoint-enabled network and confirm the DNS record resolves to a private IP.
 
-## 4. Lab 3 — Compute and Networking
+### Cleanup
+
+```bash
+# Delete the resource group (removes storage account and all data)
+az group delete --name az104-lab-rg --yes --no-wait
+```
+
+---
+
+## Lab 3 — Compute and Networking
 
 ### Objective
 
@@ -232,7 +255,7 @@ Deploy a VM, secure it with networking controls, and decide whether the workload
 4. Deploy Bastion if your subscription supports it.
 5. Review NIC effective security rules and IP configuration.
 
-### CLI / PowerShell Walkthrough
+### CLI Walkthrough
 
 ```bash
 # Create a VNet and subnet
@@ -265,17 +288,37 @@ az network vnet subnet update \
 	--vnet-name az104-vnet \
 	--name app-subnet \
 	--network-security-group az104-nsg
+
+# Create the VM
+az vm create \
+	--resource-group az104-lab-rg \
+	--name az104-vm \
+	--image Ubuntu2204 \
+	--vnet-name az104-vnet \
+	--subnet app-subnet \
+	--admin-username azureuser \
+	--generate-ssh-keys
+
+# Test with Network Watcher
+az network watcher test-ip-flow \
+	--resource-group az104-lab-rg \
+	--vm az104-vm \
+	--direction Inbound \
+	--protocol TCP \
+	--local 10.10.1.4:22 \
+	--remote 0.0.0.0:0
 ```
 
 ### Verification
 
-| Check | What to run |
-|------|-------------|
+| Check | How to verify |
+|-------|---------------|
 | VM | Confirm the NIC is in the expected subnet |
 | NSG | Review effective rules and test the port |
 | Bastion | Connect without exposing a public admin port |
+| Watcher | Use IP Flow Verify to confirm NSG behavior |
 
-### Mental Checklist
+### Compute Decision Check
 
 | Decision | Hint |
 |---------|------|
@@ -284,16 +327,16 @@ az network vnet subnet update \
 | Need managed web hosting | App Service |
 | Need simple container run | Container Instances |
 
-### Network Review
+### Cleanup
 
-| Component | Why it matters |
-|----------|----------------|
-| NSG | Traffic filtering |
-| Bastion | Secure admin access |
-| Private endpoint | Private access to PaaS |
-| DNS | Name resolution for private services |
+```bash
+# Delete the entire resource group
+az group delete --name az104-lab-rg --yes --no-wait
+```
 
-## 5. Lab 4 — Monitoring and Alerting
+---
+
+## Lab 4 — Monitoring and Alerting
 
 ### Objective
 
@@ -316,7 +359,7 @@ Route telemetry into Log Analytics and build an alert that notifies the right pe
 4. Create a metric alert or log alert.
 5. Attach an action group with email or webhook.
 
-### CLI / PowerShell Walkthrough
+### CLI Walkthrough
 
 ```bash
 # Create a Log Analytics workspace
@@ -329,67 +372,77 @@ az monitor log-analytics workspace create \
 az monitor action-group create \
 	--resource-group az104-lab-rg \
 	--name az104-ag \
-	--short-name az104ag
+	--short-name az104ag \
+	--action email lab-notify yourmail@example.com
 
-# Example metric alert skeleton
+# Create a metric alert
 az monitor metrics alert create \
 	--name HighCPUAlert \
 	--resource-group az104-lab-rg \
-	--scopes /subscriptions/<subscription-id>/resourceGroups/az104-lab-rg/providers/Microsoft.Compute/virtualMachines/<vm-name> \
+	--scopes /subscriptions/<subscription-id>/resourceGroups/az104-lab-rg/providers/Microsoft.Compute/virtualMachines/az104-vm \
 	--condition "avg Percentage CPU > 80" \
+	--window-size 5m \
+	--evaluation-frequency 1m \
+	--action az104-ag \
 	--description "Alert when CPU exceeds 80%"
+```
+
+### Example KQL Queries to Try
+
+```
+// Recent heartbeats (proves agent is reporting)
+Heartbeat
+| where TimeGenerated > ago(1h)
+| summarize LastBeat = max(TimeGenerated) by Computer
+
+// Count events by level
+Event
+| where TimeGenerated > ago(24h)
+| summarize count() by EventLevelName
 ```
 
 ### Verification
 
-| Check | What to run |
-|------|-------------|
+| Check | How to verify |
+|-------|---------------|
 | Diagnostics | Confirm logs are arriving in Log Analytics |
 | Query | Run a KQL query and inspect the result |
 | Alert | Trigger or simulate the alert threshold |
+| Action | Confirm the action group sends the notification |
 
-### Example Query Thinking
+### Cleanup
 
-| Need | Think |
-|------|-------|
-| Show recent errors | Filter and summarize logs |
-| Track CPU trend | Metrics |
-| Audit a create/delete operation | Activity log |
+```bash
+# Delete the resource group
+az group delete --name az104-lab-rg --yes --no-wait
+```
 
-### Validation Questions
+---
 
-| Question | Answer |
-|----------|--------|
-| Which telemetry is best for trends? | Metrics |
-| Which telemetry is best for investigations? | Logs |
-| Which log tracks resource operations? | Activity log |
-| Which component sends notifications? | Action group |
-
-## 6. Practice Questions
+## Practice Questions
 
 1. A team needs access to manage resources only within one resource group. Which scope should you use?
 2. A storage access requirement says the link should expire after two hours. Which access method fits best?
 3. An app must be reachable privately from inside a VNet. Which connectivity feature should you choose?
 4. A workload needs many identical VMs and automatic scale-out. What should you use?
 5. You need to investigate why a deployment failed. Which telemetry source is the first place to check?
+6. An admin needs to route `/api/*` to one backend and `/images/*` to another. Which service should they use?
+7. A VM is stopped but the team is still being billed for compute. What is wrong?
 
-## 7. Answer Checklists
+---
 
-| Question | Answer pattern |
-|----------|----------------|
-| Scope for team management | Resource group scope or subscription scope, depending on blast radius |
-| Temporary storage access | SAS |
-| Private PaaS access | Private endpoint + DNS |
-| Repeatable compute scale-out | VMSS |
-| Deployment failure investigation | Activity log, then logs |
+## Answer Key
 
-## 8. Lab Gotchas
+| Question | Answer |
+|----------|--------|
+| 1 | Resource group scope |
+| 2 | SAS token |
+| 3 | Private endpoint + Private DNS zone |
+| 4 | VMSS |
+| 5 | Activity log, then diagnostic logs |
+| 6 | Application Gateway (Layer 7) |
+| 7 | The VM is stopped but not **deallocated** — `az vm deallocate` to stop billing |
 
-| Problem | Likely cause |
-|--------|--------------|
-| Resource deploys but cannot be accessed | RBAC or NSG issue |
-| Storage reachable by IP but not by name | DNS issue |
-| Alert never fires | Wrong metric, threshold, or scope |
-| Policy blocks deployment unexpectedly | Policy assignment scope or rule conflict |
-| VM is stopped but still billed | Deallocation state not reached |
+---
 
+**Version:** 2.0 | **Last Updated:** 2026-04-28

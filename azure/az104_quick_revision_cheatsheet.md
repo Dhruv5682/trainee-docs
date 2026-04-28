@@ -1,209 +1,384 @@
+---
+Version: 2.0
+Last Updated: 2026-04-28
+Status: Published
+---
+
 [🏠 Home](../README.md) · [Azure](README.md)
 
 # ☁️ AZ-104 Azure Administrator — Quick Revision Cheatsheet
 
-> **Audience:** AZ-104 candidates and Azure admins  
-> **Focus:** Last-minute recall, exam traps, and decision tables  
-> **Tip:** Read this after the handbook. It is meant for fast refresh, not first-time learning.
+> **For:** AZ-104 candidates and Azure admins
+> **Purpose:** Fast lookup tables only — no explanations. Read the [handbook](az104_azure_administrator_handbook.md) first.
+> **💡 Tip:** Use TOC to jump to sections. Use Ctrl+F to search for a keyword.
+
+---
 
 ## Table of Contents
 
-1. [Exam Weighting Snapshot](#1-exam-weighting-snapshot)
-2. [Identity and Governance Cheats](#2-identity-and-governance-cheats)
-3. [Storage Cheats](#3-storage-cheats)
-4. [Compute Cheats](#4-compute-cheats)
-5. [Networking Cheats](#5-networking-cheats)
-6. [Monitoring Cheats](#6-monitoring-cheats)
-7. [Common Exam Traps](#7-common-exam-traps)
-8. [Quick Revision Card](#8-quick-revision-card)
+1. [Exam Weighting](#1-exam-weighting)
+2. [Identity & Governance](#2-identity--governance)
+3. [Storage](#3-storage)
+4. [Compute](#4-compute)
+5. [Networking](#5-networking)
+6. [Monitoring](#6-monitoring)
+7. [Key CLI Commands](#7-key-cli-commands)
 
-## 1. Exam Weighting Snapshot
+---
 
-| Domain | Weight | Memory cue |
-|--------|--------|------------|
-| Identity and governance | 20–25% | Who and where |
-| Storage | 15–20% | Data access and durability |
-| Compute | 20–25% | VM, VMSS, App Service, containers |
-| Networking | 15–20% | Traffic, DNS, routing, NSG |
-| Monitoring | 10–15% | Metrics, logs, alerts |
+## 1. Exam Weighting
 
-## 2. Identity and Governance Cheats
+| Domain | Weight |
+|--------|--------|
+| Identity and governance | 20–25% |
+| Storage | 15–20% |
+| Compute | 20–25% |
+| Networking | 15–20% |
+| Monitoring | 10–15% |
 
-| Need | Pick this |
-|------|-----------|
-| Human login | User |
-| Group access | Group |
-| External collaborator | Guest |
-| App automation | Service principal or managed identity |
-| Grant access at a scope | RBAC |
-| Stop noncompliant deployment | Azure Policy |
-| Prevent delete | Resource lock |
+---
 
-### Role and Scope Cheats
+## 2. Identity & Governance
 
-| Role | Use case |
-|------|----------|
-| Reader | View only |
-| Contributor | Manage resources, not access |
-| Owner | Full control and access delegation |
-| User Access Administrator | Assign roles |
+### Identity Objects
 
-| Scope | Example |
+| Object | Use |
+|--------|-----|
+| User | Human identity |
+| Group | Batch role/license assignment |
+| Guest | External B2B collaborator |
+| Service principal | CI/CD, external automation |
+| Managed identity (system) | Azure resource → Azure resource (no secrets) |
+| Managed identity (user) | Shared across multiple resources |
+
+### RBAC Roles
+
+| Role | Can manage resources | Can assign roles |
+|------|---------------------|-----------------|
+| Reader | View only | ✗ |
+| Contributor | Yes | ✗ |
+| Owner | Yes | ✅ |
+| User Access Admin | ✗ | ✅ |
+
+### RBAC Scope Hierarchy
+
+| Level | Example |
 |-------|---------|
 | Management group | Company-wide policy |
-| Subscription | Team boundary |
+| Subscription | Team/project boundary |
 | Resource group | App environment |
-| Resource | Single server or database |
+| Resource | Single server or DB |
 
-### Governance Recall
+### Custom Roles
 
-| Control | What it is |
-|---------|------------|
+| Field | Purpose |
+|-------|---------|
+| Actions | Control-plane operations |
+| DataActions | Data-plane operations |
+| NotActions | Excluded operations |
+| AssignableScopes | Where role can be used |
+
+### Governance Tools
+
+| Tool | Purpose |
+|------|---------|
+| Policy (deny) | Block noncompliant deployments |
+| Policy (audit) | Flag without blocking |
+| Initiative | Group of policies |
+| Lock (CanNotDelete) | Prevent deletion |
+| Lock (ReadOnly) | Prevent all changes (including data-plane) |
 | Tag | Metadata for cost/ownership |
-| Policy | Prevent or audit noncompliance |
-| Lock | Prevent delete or modify |
-| Budget | Cost guardrail |
+| Budget | Spending threshold + alerts |
 
-## 3. Storage Cheats
+---
 
-| Topic | Quick recall |
-|------|--------------|
-| LRS | One datacenter, low cost |
-| ZRS | Multiple zones |
-| GRS | Paired region copy |
-| RA-GRS | Readable secondary |
+## 3. Storage
 
-| Access method | Best for |
-|--------------|-----------|
-| Access key | Full account access |
-| SAS | Time-bound delegated access |
-| Entra auth | Identity-based access |
+### Redundancy
 
-| Feature | Use it for |
-|---------|------------|
-| Soft delete | Recover deleted data |
-| Snapshot | Point-in-time recovery |
+| Type | Copies | Protects against |
+|------|--------|-----------------|
+| LRS | 3 (one zone) | Drive/rack failure |
+| ZRS | 3 (three zones) | Datacenter failure |
+| GRS | 6 (two regions) | Regional disaster |
+| RA-GRS | 6 + read secondary | Regional disaster + read access |
+
+### Blob Tiers
+
+| Tier | Access cost | Storage cost | Retrieval |
+|------|-----------|-------------|-----------|
+| Hot | Lowest | Highest | Instant |
+| Cool (≥30d) | Higher | Lower | Instant |
+| Cold (≥90d) | Very High | Very Low | Instant |
+| Archive (≥180d) | Highest | Lowest | Hours (rehydrate) |
+
+### Access Methods
+
+| Method | Scope | Duration |
+|--------|-------|----------|
+| Account keys | Entire account | Permanent until rotated |
+| SAS token | Specific resource/permissions | Time-bound |
+| Entra ID + RBAC | Identity-based | Persistent |
+| Stored access policy | Group SAS tokens | Revocable |
+
+### Network Access
+
+| Approach | DNS change needed | Data path |
+|----------|------------------|-----------|
+| Public (all networks) | No | Internet |
+| Service endpoint | No | Azure backbone |
+| Private endpoint | Yes (Private DNS zone) | Fully private |
+
+### Data Protection
+
+| Feature | Use case |
+|---------|----------|
+| Soft delete | Recover deleted blobs |
 | Versioning | Historical versions |
-| Lifecycle rule | Tiering and expiry |
+| Point-in-time restore | Roll back container state |
+| Immutability (WORM) | Legal compliance |
+| Lifecycle rules | Auto-tier or expire |
 
-| Network access | Meaning |
-|---------------|---------|
-| Service endpoint | Trusted VNet path to public endpoint |
-| Private endpoint | Private IP in VNet |
+### Transfer Tools
 
-## 4. Compute Cheats
+| Tool | Best for |
+|------|----------|
+| AzCopy | CLI bulk transfer |
+| Storage Explorer | GUI management |
+| Data Box | Petabyte-scale offline |
+| Azure File Sync | Hybrid file caching |
+
+---
+
+## 4. Compute
+
+### Service Selection
 
 | Service | Best fit |
 |---------|----------|
 | VM | Full OS control |
-| VMSS | Identical scale-out VMs |
-| App Service | Managed web app hosting |
-| Container Instances | Fast single container run |
-| Container Apps | Managed container platform |
+| VMSS | Scale-out identical VMs |
+| App Service | Managed web apps/APIs |
+| ACI | Quick single container |
+| Container Apps | Event-driven microservices |
+| ACR | Private Docker registry |
 
-### VM Memory Aids
+### VM Disk Types
 
-| Item | Meaning |
-|------|---------|
-| OS disk | Boot and OS |
-| Data disk | App and data storage |
-| Snapshot | Point-in-time recovery |
-| Managed disk | Default Azure disk type |
+| Type | Best for |
+|------|----------|
+| Ultra Disk | Top-tier databases |
+| Premium SSD v2 | High-perf databases |
+| Premium SSD | Production workloads |
+| Standard SSD | Dev/test |
+| Standard HDD | Backups, archival |
 
-| Availability model | Failure domain |
-|-------------------|----------------|
-| Availability set | Host/rack failure |
-| Availability zone | Datacenter failure |
+### Availability
 
-### App Service Aids
+| Model | Protects against | SLA |
+|-------|-----------------|-----|
+| Single VM (Premium) | — | 99.9% |
+| Availability Set | Rack/host failure | 99.95% |
+| Availability Zone | Datacenter failure | 99.99% |
 
-| Feature | Why you care |
-|---------|--------------|
-| Deployment slot | Safer release |
-| Backup | Restore config/content |
-| Custom domain + TLS | Public web app |
-| VNet integration | Private connectivity |
+### App Service Tiers
 
-## 5. Networking Cheats
+| Tier | Key features |
+|------|-------------|
+| Free/Shared | Learning (no SLA) |
+| Basic | Custom domains, SSL |
+| Standard | Auto-scale, slots, backups |
+| Premium | VNet integration, high perf |
+| Isolated | Dedicated ASE |
 
-| Component | Recall |
-|-----------|--------|
-| VNet | Private address space |
-| Subnet | Segmented VNet slice |
-| Peering | VNet-to-VNet private link |
-| UDR | Custom route table |
-| Public IP | Internet endpoint |
-| NSG | Traffic allow/deny filter |
-| ASG | Group NICs for NSG rules |
-| Bastion | RDP/SSH without public IP |
+### ARM Template Sections
 
-### NSG and DNS Cheats
+| Section | Purpose |
+|---------|---------|
+| parameters | Deploy-time inputs |
+| variables | Reusable internal values |
+| resources | Azure objects to create |
+| outputs | Post-deployment return values |
 
-| Item | Recall |
-|------|--------|
-| Lower NSG priority number | Wins |
-| Effective rules | Actual applied rules |
-| Private endpoint DNS | Usually required |
-| Azure DNS | Public zone hosting |
-| Private DNS zone | Internal name resolution |
+---
 
-### Load Balancing Cheats
+## 5. Networking
 
-| Service | Use case |
-|---------|----------|
-| Load Balancer | Layer 4 distribution |
-| Health probe | Backend health signal |
-
-## 6. Monitoring Cheats
-
-| Telemetry | Use it for |
-|----------|------------|
-| Metrics | Trend and threshold alerts |
-| Logs | Detailed troubleshooting |
-| Activity log | Control-plane audit |
+### Core Components
 
 | Component | Purpose |
-|----------|---------|
-| Diagnostic settings | Send telemetry out |
-| Log Analytics | Query logs with KQL |
-| Action group | Notify the right people |
-| Alert processing rule | Suppress or route alerts |
+|-----------|---------|
+| VNet | Private address space |
+| Subnet | VNet segment |
+| NSG | Traffic allow/deny filter |
+| ASG | Group NICs for rules |
+| Peering | VNet-to-VNet private link |
+| UDR | Custom route override |
+| Public IP | Internet endpoint |
 
-## 7. Common Exam Traps
+### Reserved Subnet Names
 
-| Trap | Better answer |
-|------|---------------|
-| Policy grants access | No, RBAC grants access |
-| Lock grants access | No, lock only protects from change/delete |
-| SAS equals access key | No, SAS is scoped and temporary |
-| Stopped VM equals deallocated VM | No, deallocated is the important billing/state clue |
-| Private endpoint works without DNS | Not usually |
-| NSG order is arbitrary | Lower number = higher priority |
-| Metrics and logs are the same | They answer different questions |
-| Availability set = zone | Different failure domains |
-| RBAC scope does not matter | Scope is critical |
+| Name | For |
+|------|-----|
+| `AzureBastionSubnet` | Bastion host (min /27) |
+| `GatewaySubnet` | VPN/ExpressRoute gateway |
 
-## 8. Quick Revision Card
+### NSG Defaults (cannot delete)
 
+| Priority | Rule | Action |
+|----------|------|--------|
+| 65000 | AllowVnetInBound | Allow |
+| 65001 | AllowAzureLBInBound | Allow |
+| 65500 | DenyAllInBound | Deny |
+
+### Load Balancing
+
+| Service | Layer | Key feature |
+|---------|-------|-------------|
+| Load Balancer | L4 (TCP/UDP) | Port-based distribution |
+| Application Gateway | L7 (HTTP) | URL routing, WAF, SSL termination |
+
+### Connectivity
+
+| Service | Path | Best for |
+|---------|------|----------|
+| VNet Peering | Azure backbone | VNet-to-VNet |
+| VPN Gateway | Internet (encrypted) | On-prem hybrid |
+| ExpressRoute | Private provider | Enterprise hybrid |
+| Bastion | Portal | Secure RDP/SSH |
+
+### Endpoints
+
+| Type | DNS change | Access path |
+|------|-----------|-------------|
+| Service endpoint | No | Azure backbone (public IP) |
+| Private endpoint | Yes | Private IP in VNet |
+
+### Network Watcher Tools
+
+| Tool | Use |
+|------|-----|
+| IP Flow Verify | NSG allow/deny check |
+| Next Hop | Route decision |
+| Connection Troubleshoot | End-to-end test |
+| NSG Flow Logs | Traffic audit |
+| Packet Capture | Deep debug |
+
+---
+
+## 6. Monitoring
+
+### Telemetry Types
+
+| Type | Speed | Best for |
+|------|-------|----------|
+| Metrics | Real-time | Threshold alerts, dashboards |
+| Logs | Query-time | Deep investigation (KQL) |
+| Activity Log | Near real-time | Control-plane audit |
+
+### Alert Components
+
+| Component | Role |
+|-----------|------|
+| Alert rule | Detect condition |
+| Action group | Notify (email, SMS, webhook) |
+| Alert processing rule | Suppress or route |
+
+### Alert Types
+
+| Type | Trigger |
+|------|---------|
+| Metric | Numeric threshold |
+| Log | KQL query match |
+| Activity log | Resource operation |
+| Service health | Platform issue |
+
+### KQL Quick Reference
+
+| Operator | Does |
+|----------|------|
+| `where` | Filter |
+| `summarize` | Aggregate |
+| `project` | Select columns |
+| `order by` | Sort |
+| `bin()` | Time buckets |
+| `ago()` | Relative time |
+| `render` | Chart |
+
+### Azure Backup
+
+| Component | Purpose |
+|-----------|---------|
+| Recovery Services Vault | Stores backups |
+| Backup policy | Schedule + retention |
+| Recovery point | Restorable snapshot |
+| Soft delete (14d) | Protect against accidental delete |
+
+---
+
+## 7. Key CLI Commands
+
+### Identity
+
+```bash
+az ad user create --display-name "..." --user-principal-name "..."
+az ad group create --display-name "..." --mail-nickname "..."
+az ad sp create-for-rbac --name "..." --role Contributor --scopes "..."
+az role assignment create --assignee-object-id "..." --role "..." --scope "..."
+az role definition create --role-definition @role.json
 ```
-  ┌──────────────────────────────────────────────────────────┐
-  │  AZ-104 ONE-LINER MEMORY CARD                            │
-  │                                                          │
-  │  Entra ID   = who you are                                │
-  │  RBAC       = what you can do and where                  │
-  │  Policy     = what is allowed                            │
-  │  Lock       = what must not change or delete             │
-  │  Tags       = how you classify and report                │
-  │  SAS        = temporary delegated storage access         │
-  │  Private EP  = private IP + DNS for PaaS                 │
-  │  ASG        = group NICs for NSG rules                   │
-  │  Bastion    = admin access without public IP             │
-  │  Set        = host/rack failure protection               │
-  │  Zone       = datacenter failure protection              │
-  │  VMSS       = repeatable scale-out compute               │
-  │  App Service= managed web hosting                        │
-  │  Metrics    = fast numeric signal                        │
-  │  Logs       = deep investigation                         │
-  │  Activity   = control-plane audit trail                  │
-  └──────────────────────────────────────────────────────────┘
+
+### Governance
+
+```bash
+az policy assignment create --name "..." --policy "..." --scope "..."
+az lock create --name "..." --lock-type CanNotDelete --resource-group "..."
+az group update --name "..." --set tags.env=prod tags.owner=team
 ```
+
+### Storage
+
+```bash
+az storage account create --name "..." --sku Standard_ZRS --kind StorageV2
+az storage container create --name "..." --account-name "..."
+az storage blob generate-sas --account-name "..." --permissions r --expiry "..."
+```
+
+### Compute
+
+```bash
+az vm create --name "..." --image Ubuntu2204 --generate-ssh-keys
+az vm deallocate --name "..."               # Stop billing
+az vm disk attach --vm-name "..." --new --size-gb 128
+az vmss create --name "..." --instance-count 2 --upgrade-policy-mode automatic
+az webapp create --name "..." --plan "..."
+az webapp deployment slot create --name "..." --slot staging
+az webapp deployment slot swap --name "..." --slot staging
+```
+
+### Networking
+
+```bash
+az network vnet create --name "..." --address-prefix 10.0.0.0/16 --subnet-name "..."
+az network nsg create --name "..."
+az network nsg rule create --nsg-name "..." --priority 100 --access Allow --protocol Tcp
+az network lb create --name "..." --sku Standard
+az network dns zone create --name "..."
+az network private-dns zone create --name "..."
+az network watcher test-ip-flow --vm "..." --direction Inbound --protocol TCP
+```
+
+### Monitoring
+
+```bash
+az monitor log-analytics workspace create --workspace-name "..."
+az monitor diagnostic-settings create --resource "..." --workspace "..."
+az monitor action-group create --name "..." --action email ops ops@company.com
+az monitor metrics alert create --name "..." --condition "avg Percentage CPU > 80"
+az backup vault create --name "..."
+az backup protection enable-for-vm --vault-name "..." --vm "..."
+```
+
+---
+
+**Version:** 2.0 | **Last Updated:** 2026-04-28

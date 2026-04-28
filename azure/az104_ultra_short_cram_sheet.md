@@ -1,74 +1,76 @@
+---
+Version: 2.0
+Last Updated: 2026-04-28
+Status: Published
+---
+
 [🏠 Home](../README.md) · [Azure](README.md)
 
 # ☁️ AZ-104 Ultra-Short Cram Sheet
 
-> **Audience:** Exam-day revision only  
-> **Focus:** What to remember when you have 5 minutes, not 5 hours  
-> **Tip:** If a question feels vague, map it to who, scope, allowed, network, or telemetry.
+> **When:** Exam-day, 5 minutes before you start
+> **How:** Read the one-liner model, scan the "if you see X → think Y" table, glance at traps. Go.
 
-## 1. One-Line Model
+---
 
-**Identity decides who, scope decides where, policy decides what is allowed, networking decides how it reaches, and monitoring tells you what happened.**
+## The Model
 
-## 2. Fast Recall Table
+**Identity decides who → scope decides where → policy decides what is allowed → networking decides how it reaches → monitoring tells you what happened.**
 
-| Topic | Memory cue |
-|------|------------|
-| Entra ID | Who you are |
-| RBAC | What you can do and where |
-| Policy | What is allowed |
-| Lock | What must not change or delete |
-| Tag | How you classify resources |
-| SAS | Temporary delegated storage access |
-| Private endpoint | Private IP + DNS for PaaS |
-| Service endpoint | Trusted VNet path to public PaaS |
-| VM | Full OS control |
-| VMSS | Repeatable scale-out VMs |
-| App Service | Managed web hosting |
-| NSG | Traffic filter |
-| Bastion | Admin access without public IP |
-| Metrics | Fast alerts and trends |
-| Logs | Deep investigation |
-| Activity log | Control-plane audit trail |
+## If You See This → Think This
 
-## 3. Highest-Yield Comparisons
+| Question pattern | Answer direction |
+|-----------------|------------------|
+| "Temporary access to storage" | SAS token |
+| "Identity-based storage access" | Entra ID + data RBAC role |
+| "Prevent accidental delete" | Lock (CanNotDelete) |
+| "Stop noncompliant deployment" | Azure Policy (deny) |
+| "Assign permissions to others" | User Access Admin or Owner (NOT Contributor) |
+| "Private access to PaaS" | Private endpoint + Private DNS zone |
+| "Many identical VMs, auto-scale" | VMSS |
+| "Managed web app with zero-downtime deploy" | App Service + deployment slot swap |
+| "Secure RDP/SSH without public IP" | Azure Bastion |
+| "Route /api to backend A, /images to backend B" | Application Gateway (L7) |
+| "Distribute TCP traffic across VMs" | Load Balancer (L4) |
+| "Connect on-prem to Azure" | VPN Gateway (internet) or ExpressRoute (private) |
+| "VM not reachable after NSG change" | Network Watcher → IP Flow Verify |
+| "Who deleted resource X?" | Activity Log |
+| "CPU trending high" | Metrics alert |
+| "Deep investigation of app errors" | Logs + KQL in Log Analytics |
+| "No data in Log Analytics" | Check diagnostic settings on the source resource |
+| "Back up a VM" | Recovery Services Vault + backup policy |
+| "Data must not be deleted for 7 years" | Immutability policy (WORM) |
+| "Move old data to cheaper storage" | Lifecycle management rule |
 
-| If the question says... | Think... |
-|-------------------------|----------|
-| Temporary access to storage | SAS |
-| Identity-based storage access | Entra auth |
-| Prevent delete | Lock |
-| Stop noncompliant deployment | Policy |
-| Assign permissions | RBAC |
-| Private access to PaaS | Private endpoint + DNS |
-| Need many identical VMs | VMSS |
-| Need a managed web app | App Service |
-| Need secure admin access | Bastion |
+## Traps — Read Once, Remember
 
-## 4. Common Traps
+| Wrong assumption | Reality |
+|-----------------|---------|
+| Policy = access | Policy = compliance. RBAC = access. |
+| Contributor can assign roles | It cannot. |
+| ReadOnly lock = safe to use everywhere | It blocks data-plane writes (blob uploads, key rotation). |
+| Stopped VM = no billing | Only **deallocated** stops compute billing. |
+| SAS = access key | SAS is scoped + time-bound. Keys are root access. |
+| Archive = instant | Rehydration = up to 15 hours. |
+| Private endpoint just works | Needs Private DNS zone or it resolves to public IP. |
+| NSG rules apply randomly | Lower priority number wins. |
+| Health probe pass = app healthy | Probe checks what you configure, not app logic. |
+| VNet peering is transitive | A↔B + B↔C ≠ A↔C |
 
-| Trap | Correct answer |
-|------|----------------|
-| Policy grants access | No, RBAC grants access |
-| Lock grants access | No, lock only protects |
-| SAS equals access key | No, SAS is scoped and time-bound |
-| Stopped VM equals deallocated VM | No, deallocated is the billing/state clue |
-| Private endpoint works without DNS | Usually false |
-| Metrics and logs are the same | They solve different problems |
-
-## 5. 30-Second Card
+## 30-Second Card
 
 ```
-Entra = who
-RBAC = where + what you can do
-Policy = what is allowed
-Lock = what is protected
-SAS = temporary storage access
-Private EP = private IP + DNS
-VMSS = scale-out VMs
-App Service = managed web app
-NSG = packet filter
-Bastion = safe admin access
-Metrics = trends
-Logs = investigation
+Entra   = who           RBAC    = what + where
+Policy  = what allowed  Lock    = what protected
+SAS     = temp access   Private EP = private IP + DNS
+VMSS    = scale VMs     App Svc = managed web
+NSG     = packet filter Bastion = safe admin
+LB      = L4 traffic    App GW  = L7 + WAF
+VPN GW  = hybrid tunnel ExpressRoute = private link
+Metrics = fast trends   Logs    = deep query (KQL)
+Activity= audit trail   Backup  = vault + policy
 ```
+
+---
+
+**Version:** 2.0 | **Last Updated:** 2026-04-28
